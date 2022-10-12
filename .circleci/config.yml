@@ -1,0 +1,109 @@
+version: 2.
+
+orbs:
+  octopus-cli: octopusdeploylabs/octopus-cli@0.0.3
+
+######//////##############//////##############//////##############
+#   DEFAULTS
+######//////##############//////##############//////##############
+
+defaults: &defaults
+  working_directory: ~/MarkForged/zztest-octopus-deploy
+  parallelism: 1
+  shell: /bin/bash --login
+  docker:
+    - image: cimg/base:2022.04
+
+eiger-dev-account: &eiger_dev_account
+  resource_class: markforged/zztest-octopus-dev
+  context:
+    - smartslice-build-publish-eiger-dev
+
+
+######//////##############//////##############//////##############
+#   FILTERS
+######//////##############//////##############//////##############      
+
+semver_regex: &semver_regex /^([Vv]?)((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$/
+
+release_branches: &release_branches_list
+  - main
+
+# Jobs with this filter only run for semver tag push, but not on branch push
+release_tag_filter: &release_tag_filter
+  filters:
+    branches:
+      ignore: /.*/
+    tags:
+      only: *semver_regex
+
+# Any branch except the release branches
+non_release_branch_filter: &non_release_branch_filter
+  filters:
+    branches:
+      ignore: *release_branches_list
+
+# Only release branches
+release_branch_filter: &release_branch_filter
+  filters:
+    branches:
+      only: *release_branches_list
+
+
+######//////##############//////##############//////##############
+#   JOBS
+######//////##############//////##############//////##############
+jobs:
+  build:
+    <<: *defaults
+    steps:
+      - checkout
+      - run:
+          name: Update submodules
+          command: git submodule update --init
+      - run:
+          name: Install awscli
+          command: |
+            set -e
+            wget -qO awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
+            unzip -q awscliv2.zip
+            sudo ./aws/install
+      - setup_remote_docker:
+          version: 20.10.11
+          docker_layer_caching: true
+  octo_build:
+    executor:
+      name: octo/default
+    steps:
+      - octo/install-tools
+      - octo/build-information:
+          api_key: OCTOPUS_API_KEY
+          package_id: zztest-octopus-deploy
+          server: OCTOPUS_SERVER_URL
+          version: 1.2.3
+ 
+
+######//////##############//////##############//////##############
+#   WORKFLOWS
+######//////##############//////##############//////##############
+
+workflows:
+  version: 2
+
+  build_test_eiger_dev:
+    jobs:
+      - build:
+          <<: *non_release_branch_filter
+          name: Build Thor Image
+
+          context:
+            - smartslice-build-publish-eiger-dev
+
+  # When Tag is Pushed, allow pushing to RC/PROD
+  release_based_on_tag_markforged:
+    jobs:
+      - build:
+          <<: *release_tag_filter
+          name: Build Thor Image
+          context:
+            - wim-build-publish-markforged
