@@ -113,7 +113,6 @@ jobs:
             fi
             echo "Adding $PACKAGEVERSION to Bash Environment"
             echo "export OCTOPUS_PACKAGE_VERSION=${PACKAGEVERSION}" >> "$BASH_ENV"
-            echo $OCTOPUS_PACKAGE_VERSION
 
       - run:
           name: Creating Artifacts
