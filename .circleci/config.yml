@@ -162,7 +162,7 @@ workflows:
 
       - octopus:
           <<: *release_tag_filter
-          package-version: "0.0.<< pipeline.number >>"
+          package-version: "<< pipeline.git.tag >>"
           package-name:    "zztest-octopus-deploy-PROD"
           octopus-project: "zztest-octopus-deploy"
           octopus-channel: "3. Tagged Release Managed Deployment"
