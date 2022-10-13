@@ -3,3 +3,23 @@ variable "AWS Account" {
 
     value "eiger-dev" {}
 }
+
+variable "_Environment" {
+    value "dev" {
+        environment = ["development"]
+    }
+
+    value "staging" {
+        description = ""
+        environment = ["staging"]
+    }
+
+    value "production" {
+        description = ""
+        environment = ["production"]
+    }
+}
+
+variable "AWS Region" {
+    value "us-east-1" {}
+}

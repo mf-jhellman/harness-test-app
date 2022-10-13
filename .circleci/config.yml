@@ -1,7 +1,14 @@
-version: 2.
+version: 2.1
+
+######//////##############//////##############//////##############
+#   ORBS
+######//////##############//////##############//////##############
 
 orbs:
-  octopus-cli: octopusdeploylabs/octopus-cli@0.0.3
+  octopus: octopusdeploylabs/octopus-cli@0.0.3
+
+
+  
 
 ######//////##############//////##############//////##############
 #   DEFAULTS
@@ -11,14 +18,20 @@ defaults: &defaults
   working_directory: ~/MarkForged/zztest-octopus-deploy
   parallelism: 1
   shell: /bin/bash --login
-  docker:
-    - image: cimg/base:2022.04
 
 eiger-dev-account: &eiger_dev_account
-  resource_class: markforged/zztest-octopus-dev
+  resource_class: markforged/smartslice-dev
   context:
     - smartslice-build-publish-eiger-dev
 
+######//////##############//////##############//////##############
+#   EXECUTORS
+######//////##############//////##############//////##############   
+
+executors:
+  basic: &default_executor
+    docker:
+      - image: cimg/node:14.18.0-browsers  
 
 ######//////##############//////##############//////##############
 #   FILTERS
@@ -49,39 +62,80 @@ release_branch_filter: &release_branch_filter
     branches:
       only: *release_branches_list
 
+######//////##############//////##############//////##############
+#   OCTOPUS
+######//////##############//////##############//////##############
+octopus_environment_settings: &octopus_environment_settings
+  api_key: "OCTOPUS_API_KEY"
+  server:  "OCTOPUS_SERVER_URL"
+  space: "Demo"
 
 ######//////##############//////##############//////##############
 #   JOBS
 ######//////##############//////##############//////##############
 jobs:
-  build:
-    <<: *defaults
+  octopus:
+    parameters:
+      package-name:
+        type: string
+        default: foo
+      
+      package-version:
+        type: string
+        default: 0.0.0
+
+      octopus-project:
+        type: string
+        default: none
+
+      octopus-channel:
+        type: string
+        default: none  
+
+    working_directory: ~/MarkForged/<< parameters.package-name >>
+   
+    executor:
+        name: octopus/default
     steps:
       - checkout
+
       - run:
-          name: Update submodules
-          command: git submodule update --init
-      - run:
-          name: Install awscli
+          name: Creating Artifacts
           command: |
-            set -e
-            wget -qO awscliv2.zip https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip
-            unzip -q awscliv2.zip
-            sudo ./aws/install
-      - setup_remote_docker:
-          version: 20.10.11
-          docker_layer_caching: true
-  octo-build:
-    executor:
-      name: octo/default
-    steps:
-      - octo/install-tools
-      - octo/build-information:
-          api_key: OCTOPUS_API_KEY
-          package_id: zztest-octopus-deploy
-          server: OCTOPUS_SERVER_URL
-          version: 1.2.3
- 
+            mkdir /tmp/artifacts;
+            cd ~/MarkForged/<< parameters.package-name >>/deploy && zip -r /tmp/artifacts/<< parameters.package-name >>.<< parameters.package-version >>.zip terraform;
+
+      - store_artifacts:
+          path: /tmp/artifacts
+          destination: /terraform
+
+      - octopus/install-tools
+
+      - octopus/build-information:
+          <<: *octopus_environment_settings
+          package_id: << parameters.package-name >>
+          version: << parameters.package-version >>
+          overwrite_mode: "OverwriteExisting"
+
+          #TODO - Could put stuff like git commit information into this build info: 
+          # https://octopus.com/docs/octopus-rest-api/octopus-cli/build-information
+          # https://octopus.com/docs/octopus-rest-api/octopus-cli/build-information
+
+      - octopus/push:
+          <<: *octopus_environment_settings
+          package: /tmp/artifacts/<< parameters.package-name >>.<< parameters.package-version >>.zip
+
+      - octopus/create-release:
+          <<: *octopus_environment_settings
+          project: << parameters.octopus-project >>
+          release_number: << parameters.package-version >>
+          package: << parameters.package-name >>:<< parameters.package-version >>
+          channel: << parameters.octopus-channel >>
+
+          ## Required if Project is using the Git Source Control for the process
+          # TOOD - have open question to octopus support about this
+          # git_ref: << pipeline.git.branch >>
+          # git_Commit: << pipeline.git.revision	>>
 
 ######//////##############//////##############//////##############
 #   WORKFLOWS
@@ -90,20 +144,25 @@ jobs:
 workflows:
   version: 2
 
-  build_test_eiger_dev:
+  build_example:
     jobs:
-      - build:
+      - octopus:
           <<: *non_release_branch_filter
-          name: Build Thor Image
+          package-version: "0.0.<< pipeline.number >>"
+          package-name:    "zztest-octopus-deploy"
+          octopus-project: "zztest-octopus-deploy"
+          octopus-channel: "1. Dev Only Automatic Deploy"
 
-          context:
-            - smartslice-build-publish-eiger-dev
+      - octopus:
+          <<: *release_branch_filter
+          package-version: "0.0.<< pipeline.number >>"
+          package-name:    "zztest-octopus-deploy"
+          octopus-project: "zztest-octopus-deploy"
+          octopus-channel: "2. Staging Only Automatic Deploy"    
 
-  # When Tag is Pushed, allow pushing to RC/PROD
-  release_based_on_tag_markforged:
-    jobs:
-      - build:
+      - octopus:
           <<: *release_tag_filter
-          name: Build Thor Image
-          context:
-            - wim-build-publish-markforged
+          package-version: "0.0.<< pipeline.number >>"
+          package-name:    "zztest-octopus-deploy-PROD"
+          octopus-project: "zztest-octopus-deploy"
+          octopus-channel: "3. Tagged Release Managed Deployment"
