@@ -164,6 +164,7 @@ workflows:
       - octopus:
           <<: *non_release_branch_filter
           # package-version: "0.0.<< pipeline.number >>"
+          name: Octopus Auto Deploy to DEV
           package-name:    "zztest-octopus-deploy"
           octopus-project: "zztest-octopus-deploy"
           octopus-channel: "1. Dev Only Automatic Deploy"
@@ -171,6 +172,7 @@ workflows:
       - octopus:
           <<: *release_branch_filter
           # package-version: "0.0.<< pipeline.number >>"
+          name: Octopus Auto Deploy to Staging
           package-name:    "zztest-octopus-deploy"
           octopus-project: "zztest-octopus-deploy"
           octopus-channel: "2. Staging Only Automatic Deploy"    
@@ -178,6 +180,7 @@ workflows:
       - octopus:
           <<: *release_tag_filter
           # package-version: "<< pipeline.git.tag >>"
+          name: Octopus Prepare Deploy to RC/PROD
           package-name:    "zztest-octopus-deploy-PROD"
           octopus-project: "zztest-octopus-deploy"
           octopus-channel: "3. Tagged Release Managed Deployment"
