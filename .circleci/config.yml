@@ -80,9 +80,9 @@ jobs:
         type: string
         default: foo
       
-      package-version:
-        type: string
-        default: 0.0.0
+      # package-version:
+      #   type: string
+      #   default: 0.0.0
 
       octopus-project:
         type: string
@@ -100,10 +100,26 @@ jobs:
       - checkout
 
       - run:
+          name: "Setting Package Version"
+          command: |
+            GIT_TAG=<< pipeline.git.tag >>
+            if [ -z "$GIT_TAG" ]
+            then                
+              PACKAGEVERSION=0.0.<< pipeline.number >>
+              echo "No Git Tag, setting package version to  $PACKAGEVERSION"
+            else
+              PACKAGEVERSION="${GIT_TAG#?}" 
+              echo "Git Tag Exists, setting package version to $PACKAGEVERSION"
+            fi
+            echo "Adding $PACKAGEVERSION to Bash Environment"
+            echo "export OCTOPUS_PACKAGE_VERSION=${PACKAGEVERSION}" >> "$BASH_ENV"
+            echo $OCTOPUS_PACKAGE_VERSION
+
+      - run:
           name: Creating Artifacts
           command: |
             mkdir /tmp/artifacts;
-            cd ~/MarkForged/<< parameters.package-name >>/deploy && zip -r /tmp/artifacts/<< parameters.package-name >>.<< parameters.package-version >>.zip terraform;
+            cd ~/MarkForged/<< parameters.package-name >>/deploy && zip -r /tmp/artifacts/<< parameters.package-name >>."${OCTOPUS_PACKAGE_VERSION}".zip terraform;
 
       - store_artifacts:
           path: /tmp/artifacts
@@ -114,7 +130,7 @@ jobs:
       - octopus/build-information:
           <<: *octopus_environment_settings
           package_id: << parameters.package-name >>
-          version: << parameters.package-version >>
+          version: $OCTOPUS_PACKAGE_VERSION
           overwrite_mode: "OverwriteExisting"
 
           #TODO - Could put stuff like git commit information into this build info: 
@@ -123,13 +139,13 @@ jobs:
 
       - octopus/push:
           <<: *octopus_environment_settings
-          package: /tmp/artifacts/<< parameters.package-name >>.<< parameters.package-version >>.zip
+          package: /tmp/artifacts/<< parameters.package-name >>."$OCTOPUS_PACKAGE_VERSION".zip
 
       - octopus/create-release:
           <<: *octopus_environment_settings
           project: << parameters.octopus-project >>
-          release_number: << parameters.package-version >>
-          package: << parameters.package-name >>:<< parameters.package-version >>
+          release_number: $OCTOPUS_PACKAGE_VERSION
+          package: << parameters.package-name >>:$OCTOPUS_PACKAGE_VERSION
           channel: << parameters.octopus-channel >>
 
           ## Required if Project is using the Git Source Control for the process
@@ -148,21 +164,21 @@ workflows:
     jobs:
       - octopus:
           <<: *non_release_branch_filter
-          package-version: "0.0.<< pipeline.number >>"
+          # package-version: "0.0.<< pipeline.number >>"
           package-name:    "zztest-octopus-deploy"
           octopus-project: "zztest-octopus-deploy"
           octopus-channel: "1. Dev Only Automatic Deploy"
 
       - octopus:
           <<: *release_branch_filter
-          package-version: "0.0.<< pipeline.number >>"
+          # package-version: "0.0.<< pipeline.number >>"
           package-name:    "zztest-octopus-deploy"
           octopus-project: "zztest-octopus-deploy"
           octopus-channel: "2. Staging Only Automatic Deploy"    
 
       - octopus:
           <<: *release_tag_filter
-          package-version: "<< pipeline.git.tag >>"
+          # package-version: "<< pipeline.git.tag >>"
           package-name:    "zztest-octopus-deploy-PROD"
           octopus-project: "zztest-octopus-deploy"
           octopus-channel: "3. Tagged Release Managed Deployment"
