@@ -8,8 +8,6 @@ orbs:
   octopus: octopusdeploylabs/octopus-cli@0.0.3
 
 
-  
-
 ######//////##############//////##############//////##############
 #   DEFAULTS
 ######//////##############//////##############//////##############
@@ -80,10 +78,6 @@ jobs:
         type: string
         default: foo
       
-      # package-version:
-      #   type: string
-      #   default: 0.0.0
-
       octopus-project:
         type: string
         default: none
