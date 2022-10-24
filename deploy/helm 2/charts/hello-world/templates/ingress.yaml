@@ -1,0 +1,48 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: hello-world
+  namespace: hello-world
+  labels:
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: {{ include "hello-world.fullname" . }}
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/actions.response-403: >
+      {"type":"fixed-response","fixedResponseConfig":{"contentType":"text/plain","statusCode":"403","messageBody":"403
+      External access to endpoint not allowed"}}
+    alb.ingress.kubernetes.io/actions.ssl-redirect: >-
+      {"Type": "redirect", "RedirectConfig": { "Protocol": "HTTPS", "Port":
+      "443", "StatusCode": "HTTP_301"}}
+    alb.ingress.kubernetes.io/backend-protocol: HTTP
+    alb.ingress.kubernetes.io/certificate-arn: >-
+      arn:aws:acm:us-east-1:166511338741:certificate/10a19f0f-6660-4a7b-93c0-d6eb0200e77c
+    alb.ingress.kubernetes.io/group.name: dev.eiger.io
+    alb.ingress.kubernetes.io/healthcheck-path: /
+    alb.ingress.kubernetes.io/healthcheck-protocol: HTTP
+    alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS":443}]'
+    alb.ingress.kubernetes.io/scheme: internal
+    alb.ingress.kubernetes.io/security-groups: sg-0af8be52a1f71ad4b, sg-0e71f9be13ea7d78c
+    alb.ingress.kubernetes.io/ssl-policy: ELBSecurityPolicy-FS-1-2-Res-2020-10
+    alb.ingress.kubernetes.io/ssl-redirect: '443'
+    alb.ingress.kubernetes.io/target-type: ip
+
+spec:
+  rules:
+    - host: {{ .Values.ingress.host }}
+      http:
+        paths:
+          - path: /actuator/*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: response-403
+                port:
+                  name: use-annotation
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: {{ include "hello-world.fullname" . }}
+                port:
+                  number: {{ .Values.service.port }}
