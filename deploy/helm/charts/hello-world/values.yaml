@@ -27,7 +27,7 @@ service:
   port: 80
 
 bluegreen:
-  color: "GREEN"
+  color: ""
 
 ingress:
-  host: zzgreg-test-hello-world.dev.eiger.io
+  host: ""
