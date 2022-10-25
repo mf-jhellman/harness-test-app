@@ -1,11 +1,6 @@
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: hello-world
-  namespace: hello-world
-  labels:
-    app.kubernetes.io/managed-by: Helm
-    app.kubernetes.io/name: {{ include "hello-world.fullname" . }}
+ingress:
+  enabled: true
+  className: ""
   annotations:
     kubernetes.io/ingress.class: alb
     alb.ingress.kubernetes.io/actions.response-403: >
@@ -27,22 +22,23 @@ metadata:
     alb.ingress.kubernetes.io/ssl-redirect: '443'
     alb.ingress.kubernetes.io/target-type: ip
 
-spec:
-  rules:
-    - host: {{ .Values.ingress.host }}
-      http:
-        paths:
-          - path: /actuator/*
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: response-403
-                port:
-                  name: use-annotation
-          - path: /*
-            pathType: ImplementationSpecific
-            backend:
-              service:
-                name: {{ include "hello-world.fullname" . }}
-                port:
-                  number: {{ .Values.service.port }}
+    
+  hosts:
+    - host: foo-dev-octopus.dev.eiger.io
+      paths:
+        - path: /*
+          pathType: ImplementationSpecific
+          backend:
+            service:
+              name: blue-green
+              port:
+                name: use-annotation
+  service_1: 
+    name: "dev-0-0-13-hello-world"
+    weight: 50
+    port: 80
+
+  service_2: 
+    name: "dev-0-0-14-hello-world"
+    weight: 50
+    port: 80
