@@ -7,7 +7,7 @@ provider "aws" {
 terraform {
   backend "s3" {
     bucket  = "tf-state-mf-eiger-dev-default"
-    key     = "state/octopus-dummy-example"
+    key     = "state/harness-dummy-example"
     region  = "us-east-1"
     encrypt = true
   }
