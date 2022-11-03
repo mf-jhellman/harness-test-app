@@ -17,9 +17,9 @@ spec:
       - name: {{.Values.name}}-dockercfg
       {{- end}}
       containers:
-        - name: {{ .Values.Name }}
+        - name: {{ .Values.name }}
           image: {{ .Values.image }}
-          args: ["-text={{ .Values.bluegreen.color }}"]
+          args: ["-text={{ .Values.image }}"]
           ports:
             - name: http
               containerPort: 5678
