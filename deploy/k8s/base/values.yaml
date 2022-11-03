@@ -1,1 +1,2 @@
+# harness.io/skip-file-for-deploy
 namespace: <+infra.namespace>
