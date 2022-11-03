@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: {{ .Values.name }}
 spec:
-  replicas: {{ .Values.replicaCount }}
+  replicas: {{ int .Values.replicas }}
   selector:
     matchLabels:
       app: {{ .Values.name }}
@@ -12,6 +12,10 @@ spec:
       labels:
         app: {{ .Values.name }}
     spec:
+      {{- if .Values.dockercfg}}
+      imagePullSecrets:
+      - name: {{.Values.name}}-dockercfg
+      {{- end}}
       containers:
         - name: {{ .Values.Name }}
           image: {{ .Values.image }}
