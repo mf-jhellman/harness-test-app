@@ -1,4 +1,3 @@
 # harness.io/skip-file-for-deploy
 name: <+stage.variables.name>
-version: <+artifact.image>
 namespace: <+infra.namespace>
