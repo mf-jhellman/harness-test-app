@@ -27,11 +27,12 @@ metadata:
 spec:
   rules:
     - host: {{ .Values.name }}-{{ .Values.namespace }}.dev.eiger.io
-      paths:
-        - path: /*
-          pathType: ImplementationSpecific
-          backend:
-            service:
-              name: "{{ .Values.name }}"
-              port:
-                name: http
+      http:
+        paths:
+          - path: /*
+            pathType: ImplementationSpecific
+            backend:
+              service:
+                name: "{{ .Values.name }}"
+                port:
+                  name: http

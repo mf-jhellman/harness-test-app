@@ -2,8 +2,9 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: {{ .Values.name }}
-  app: {{ .Values.name }}
-  version: {{ .Values.image }}
+  labels:
+    app: {{ .Values.name }}
+    version: {{ .Values.image }}
 spec:
   replicas: {{ int .Values.replicas }} 
   selector:
