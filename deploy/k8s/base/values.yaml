@@ -1,2 +1,4 @@
 # harness.io/skip-file-for-deploy
+name: <+stage.variables.name>
+version: <+codebase.commitRef>
 namespace: <+infra.namespace>
