@@ -2,6 +2,7 @@ name: <+stage.variables.name>
 replicas: 2
 
 image: <+artifact.image>
+version: <+artifact.tag>
 dockercfg: <+artifact.imagePullSecret>
 
 namespace: <+infra.namespace>

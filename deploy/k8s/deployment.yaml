@@ -4,7 +4,7 @@ metadata:
   name: {{ .Values.name }}
   labels:
     app: {{ .Values.name }}
-    version: {{ .Values.image }}
+    version: {{ .Values.version }}
 spec:
   replicas: {{ int .Values.replicas }} 
   selector:
