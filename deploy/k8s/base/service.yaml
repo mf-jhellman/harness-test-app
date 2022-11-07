@@ -12,5 +12,4 @@ spec:
       protocol: TCP
       name: http
   selector:
-    matchExpressions:
-    - {key: name, operator: In, values: [ {{ .Values.name }}, {{ .Values.name }}-canary ] }
+    app: {{ .Values.name }}
