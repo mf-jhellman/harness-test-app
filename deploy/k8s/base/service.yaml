@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: {{ .Values.name }}
+  labels:
+    version: "{{ .Values.version }}"
+spec:
+  type: ClusterIP
+  ports:
+    - port: 80
+      targetPort: http
+      protocol: TCP
+      name: http
+  selector:
+    matchExpressions:
+    - {key: name, operator: In, values: [ {{ .Values.name }}, {{ .Values.name }}-canary ] }
