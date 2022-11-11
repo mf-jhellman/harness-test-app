@@ -17,12 +17,12 @@ spec:
     spec:
       {{- if .Values.dockercfg}}
       imagePullSecrets:
-      - name: {{.Values.name}}-dockercfg
+      - name: "{{.Values.name}}-dockercfg"
       {{- end}}
       containers:
         - name: {{ .Values.name }}
           image: {{ .Values.image }}
-          args: ["-text={{ .Values.image }}"]
+          args: ["-text=image:{{ .Values.image }}<br>version:{{ .Values.version }}<br>deployment:{{ .Values.deployment }}"]
           ports:
             - name: http
               containerPort: 5678

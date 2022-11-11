@@ -27,7 +27,7 @@ metadata:
     alb.ingress.kubernetes.io/target-type: ip
 spec:
   rules:
-    - host: {{ .Values.name }}-{{ .Values.namespace }}.dev.eiger.io
+    - host: "{{ .Values.name }}-{{ .Values.namespace }}.dev.eiger.io"
       http:
         paths:
           - path: /*
