@@ -22,7 +22,7 @@ spec:
       containers:
         - name: {{ .Values.name }}
           image: {{ .Values.image }}
-          args: ["-text=image:{{ .Values.image }}<br>version:{{ .Values.version }}<br>deployment:{{ .Values.deployment }}"]
+          args: ["-text=image:{{ .Values.image }}  \nversion:{{ .Values.version }}  \ndeployment:{{ .Values.deployment }}"]
           ports:
             - name: http
               containerPort: 5678
