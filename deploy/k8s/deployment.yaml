@@ -22,7 +22,10 @@ spec:
       containers:
         - name: {{ .Values.name }}
           image: {{ .Values.image }}
-          args: ["-text=image:{{ .Values.image }}  \nversion:{{ .Values.version }}  \ndeployment:{{ .Values.deployment }}"]
+          args: ["-text=image: $(image) \nversion: $(version) \ndeployment: $(deployment) "]
+          envFrom:
+            - configMapRef:
+                name: {{.Values.name}}
           ports:
             - name: http
               containerPort: 5678
