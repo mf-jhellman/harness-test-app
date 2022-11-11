@@ -22,7 +22,7 @@ spec:
       containers:
         - name: {{ .Values.name }}
           image: {{ .Values.image }}
-          args: ["-text=image: $(image) \nversion: $(version) \ndeployment: $(deployment) "]
+          args: ["-text=image: $(image) \nversion: $(version) \ndeployment: $(deployment_id) "]
           envFrom:
             - configMapRef:
                 name: {{.Values.name}}
