@@ -1,5 +1,5 @@
 name: <+stage.variables.name>
-deployment: <+workflow.executionId>
+deployment: <+pipeline.executionId>
 replicas: 2
 
 image: <+artifact.image>
