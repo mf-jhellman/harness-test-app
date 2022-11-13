@@ -20,7 +20,7 @@ spec:
       containers:
         - name: "{{ .Values.name }}"
           image: "{{ .Values.image }}"
-          args: ["-text=image: $(image) \nversion: $(version) \ndeployment: $(deployment_id) \npod: $(pod_name) "]
+          args: ["-text=image: $(image) \nversion: $(version) \ndeployment: $(deployment_id) \nbucket: $(bucket) \npod: $(pod_name) "]
           env:
             - name: pod_name
               valueFrom:

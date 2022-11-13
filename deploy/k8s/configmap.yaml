@@ -6,3 +6,4 @@ data:
   image: {{ .Values.image }}
   version: {{ .Values.version }}
   deployment_id: {{ .Values.deployment }}
+  bucket: {{ .Values.bucket }}

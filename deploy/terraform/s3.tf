@@ -14,3 +14,7 @@ module "s3_bucket" {
   }
 
 }
+
+output "bucket" {
+  value = module.s3_bucket.s3_bucket_id
+}
