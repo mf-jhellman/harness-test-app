@@ -5,6 +5,6 @@ replicas: 2
 image: <+artifact.image>
 version: <+artifact.tag>
 dockercfg: <+artifact.imagePullSecret>
-bucket: <+infrastructureDefinition.provisioner.steps.Terraform_Apply.output.bucket>
+bucket: <+pipeline.stages.Canary_Deploy.spec.execution.steps.Provision_Infrastructure.steps.Terraform_Apply.output.bucket>
 
 namespace: <+infra.namespace>
