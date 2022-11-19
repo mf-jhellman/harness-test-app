@@ -43,20 +43,24 @@ octopus_environment_settings: &octopus_environment_settings
 ######//////##############//////##############//////##############
 jobs:
   build_image:
-    docker: # executor type
-      - image: cimg/base:stable
+    docker:
+      - image: cimg/go:1.17
     steps:
-      - setup_remote_docker
       - checkout
+      - setup_remote_docker
       - run:
           name: Build Image
           command: |
-            export XC_OS=linux 
-            export XC_ARCH=amd64 
-            export VERSION=test-$(git rev-parse HEAD) 
-            export DOCKER_TARGETS=alpine 
+            VERSION=test-$(git rev-parse HEAD) 
+            DOCKER_TARGETS=alpine 
             docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
-            make --debug
+            CGO_ENABLED="0"
+            GOOS=linux
+            GOARCH=amd64
+            go build \
+              -a \
+              -o="pkg/linux_amd64/http-echo" \
+              -ldflags "-s -w"
             make docker-build
             DOCKER_TAG=${DOCKERHUB_USERNAME}/http-echo:$(make docker-push | tail -n 1 | cut -f 1 -d ':') 
             echo "export DOCKER_TAG=${DOCKER_TAG}" >> $BASH_ENV
