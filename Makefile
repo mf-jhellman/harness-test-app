@@ -69,6 +69,7 @@ define make-xc-target
 				CGO_ENABLED="0" \
 				GOOS="${1}" \
 				GOARCH="${2}" \
+				GO111MODULE=auto \
 				go build \
 				  -a \
 					-o="pkg/${1}_${2}/${NAME}${3}" \
