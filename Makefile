@@ -65,7 +65,15 @@ define make-xc-target
 			--volume="${CURRENT_DIR}:/go/src/${PROJECT}" \
 			--workdir="/go/src/${PROJECT}" \
 			"golang:${GOVERSION}" \
-			pwd && ls -al 
+			env \
+				CGO_ENABLED="0" \
+				GOOS="${1}" \
+				GOARCH="${2}" \
+				go build \
+				  -a \
+					-o="pkg/${1}_${2}/${NAME}${3}" \
+					-ldflags "${LD_FLAGS}" \
+					-tags "${GOTAGS}"
   endif
   .PHONY: $1/$2
 
