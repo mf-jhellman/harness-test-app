@@ -56,8 +56,6 @@ jobs:
             export VERSION=test-$(git rev-parse HEAD) 
             export DOCKER_TARGETS=alpine 
             docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
-            pwd
-            ls -al
             make --debug
             make docker-build
             DOCKER_TAG=${DOCKERHUB_USERNAME}/http-echo:$(make docker-push | tail -n 1 | cut -f 1 -d ':') 
