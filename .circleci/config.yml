@@ -52,6 +52,7 @@ jobs:
           name: Build Image
           command: |
             VERSION=test-$(git rev-parse HEAD) 
+            DOCKER_TAG="$DOCKERHUB_USERNAME/http-echo:$VERSION"
             DOCKER_TARGETS=alpine 
             docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
             CGO_ENABLED="0"
@@ -61,8 +62,15 @@ jobs:
               -a \
               -o="pkg/linux_amd64/http-echo" \
               -ldflags "-s -w"
-            make docker-build
-            DOCKER_TAG=${DOCKERHUB_USERNAME}/http-echo:$(make docker-push | tail -n 1 | cut -f 1 -d ':') 
+            docker build \
+              --rm \
+              --force-rm \
+              --no-cache \
+              --compress \
+              --file="docker/alpine/Dockerfile" \
+              --build-arg="LD_FLAGS="-s -w" \
+              --tag="DOCKER_TAG" \
+              .
             echo "export DOCKER_TAG=${DOCKER_TAG}" >> $BASH_ENV
   test:
     docker: # executor type
