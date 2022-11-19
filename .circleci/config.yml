@@ -93,11 +93,13 @@ workflows:
   build_and_test:
     jobs:
       - build_image:
-          context: DOCKERHUB
+          context: 
+            - DOCKERHUB
       - test:
           requires:
             - build_image
       - tag_image_for_deploy:
-          context: DOCKERHUB
+          context: 
+            - DOCKERHUB
           requires:
             - test
