@@ -43,15 +43,15 @@ octopus_environment_settings: &octopus_environment_settings
 ######//////##############//////##############//////##############
 jobs:
   build_image:
-    docker:
-      - image: circleci/golang:1.15.8
+    docker: # executor type
+      - image: cimg/base:stable
     steps:
       - setup_remote_docker
       - checkout
       - run:
           name: Build Image
           command: |
-            XC_OS=darwin 
+            XC_OS=linux 
             XC_ARCH=amd64 
             VERSION=test-$(git rev-parse HEAD) 
             DOCKER_TARGETS=alpine 
