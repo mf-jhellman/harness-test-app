@@ -55,10 +55,8 @@ jobs:
             XC_ARCH=amd64 
             VERSION=test-$(git rev-parse HEAD) 
             DOCKER_TARGETS=alpine 
-            echo $DOCKERHUB_USERNAME
-            echo $DOCKERHUB_PASSWORD
             docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
-            make
+            make --debug
             make docker-build
             DOCKER_TAG=${DOCKERHUB_USERNAME}/http-echo:$(make docker-push | tail -n 1 | cut -f 1 -d ':') 
             echo "export DOCKER_TAG=${DOCKER_TAG}" >> $BASH_ENV
