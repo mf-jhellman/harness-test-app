@@ -51,10 +51,10 @@ jobs:
       - run:
           name: Build Image
           command: |
-            XC_OS=linux 
-            XC_ARCH=amd64 
-            VERSION=test-$(git rev-parse HEAD) 
-            DOCKER_TARGETS=alpine 
+            export XC_OS=linux 
+            export XC_ARCH=amd64 
+            export VERSION=test-$(git rev-parse HEAD) 
+            export DOCKER_TARGETS=alpine 
             docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
             make --debug
             make docker-build
