@@ -70,7 +70,7 @@ define make-xc-target
 				GOOS="${1}" \
 				GOARCH="${2}" \
 				GO111MODULE=auto \
-				go build \
+				pwd && ls -al && go build \
 				  -a \
 					-o="pkg/${1}_${2}/${NAME}${3}" \
 					-ldflags "${LD_FLAGS}" \
