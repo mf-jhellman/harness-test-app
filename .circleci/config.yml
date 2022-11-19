@@ -44,9 +44,10 @@ octopus_environment_settings: &octopus_environment_settings
 jobs:
   build_image:
     docker:
-      - image: circleci/golang:1.15.8
+      - image: docker:17.05.0-ce-git
     steps:
       - checkout
+      - setup_remote_docker
       - run:
           name: Build Image
           command: |
@@ -71,9 +72,10 @@ jobs:
             true
 
   tag_image_for_deploy: 
-    docker: # executor type
-      - image: cimg/base:stable
+    docker:
+      - image: docker:17.05.0-ce-git
     steps:
+      - setup_remote_docker
       - run:
           name: Tag Image for Deployment
           command: |
