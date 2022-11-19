@@ -1,35 +1,5 @@
 version: 2.1
 
-######//////##############//////##############//////##############
-#   ORBS
-######//////##############//////##############//////##############
-
-orbs:
-  octopus: octopusdeploylabs/octopus-cli@0.0.3
-
-
-######//////##############//////##############//////##############
-#   DEFAULTS
-######//////##############//////##############//////##############
-
-defaults: &defaults
-  working_directory: ~/MarkForged/zztest-octopus-deploy
-  parallelism: 1
-  shell: /bin/bash --login
-
-eiger-dev-account: &eiger_dev_account
-  resource_class: markforged/smartslice-dev
-  context:
-    - smartslice-build-publish-eiger-dev
-
-######//////##############//////##############//////##############
-#   EXECUTORS
-######//////##############//////##############//////##############   
-
-executors:
-  basic: &default_executor
-    docker:
-      - image: cimg/node:14.18.0-browsers  
 
 ######//////##############//////##############//////##############
 #   FILTERS
@@ -72,79 +42,44 @@ octopus_environment_settings: &octopus_environment_settings
 #   JOBS
 ######//////##############//////##############//////##############
 jobs:
-  octopus:
-    parameters:
-      package-name:
-        type: string
-        default: foo
-      
-      octopus-project:
-        type: string
-        default: none
-
-      octopus-channel:
-        type: string
-        default: none  
-
-    working_directory: ~/MarkForged/<< parameters.package-name >>
-   
-    executor:
-        name: octopus/default
+  build_image:
+    docker:
+      - image: circleci/golang:1.15.8
     steps:
       - checkout
-
       - run:
-          name: "Setting Package Version"
+          name: Build Image
           command: |
-            GIT_TAG=<< pipeline.git.tag >>
-            if [ -z "$GIT_TAG" ]
-            then                
-              PACKAGEVERSION=0.0.<< pipeline.number >>
-              echo "No Git Tag, setting package version to  $PACKAGEVERSION"
-            else
-              PACKAGEVERSION="${GIT_TAG#?}" 
-              echo "Git Tag Exists, setting package version to $PACKAGEVERSION"
-            fi
-            echo "Adding $PACKAGEVERSION to Bash Environment"
-            echo "export OCTOPUS_PACKAGE_VERSION=${PACKAGEVERSION}" >> "$BASH_ENV"
-
+            XC_OS=darwin 
+            XC_ARCH=amd64 
+            VERSION=test-$(git rev-parse HEAD) 
+            DOCKER_TARGETS=alpine 
+            echo “$DOCKERHUB_PASSWORD” | docker login -u “$DOCKERHUB_USERNAME” — password-stdin
+            make
+            make docker-build
+            DOCKER_TAG=${DOCKERHUB_USERNAME}/http-echo:$(make docker-push | tail -n 1 | cut -f 1 -d ':') 
+            echo "export DOCKER_TAG=${DOCKER_TAG}" >> $BASH_ENV
+  test:
+    docker: # executor type
+      - image: cimg/base:stable
+    steps: 
       - run:
-          name: Creating Artifacts
+          name: Run Tests
+          command: | 
+            true
+
+  tag_image_for_deploy: 
+    docker: # executor type
+      - image: cimg/base:stable
+    steps:
+      - run:
+          name: Tag Image for Deployment
           command: |
-            mkdir /tmp/artifacts;
-            cd ~/MarkForged/<< parameters.package-name >>/deploy && zip -r /tmp/artifacts/<< parameters.package-name >>."${OCTOPUS_PACKAGE_VERSION}".zip terraform;
-
-      - store_artifacts:
-          path: /tmp/artifacts
-          destination: /terraform
-
-      - octopus/install-tools
-
-      - octopus/build-information:
-          <<: *octopus_environment_settings
-          package_id: << parameters.package-name >>
-          version: $OCTOPUS_PACKAGE_VERSION
-          overwrite_mode: "OverwriteExisting"
-
-          #TODO - Could put stuff like git commit information into this build info: 
-          # https://octopus.com/docs/octopus-rest-api/octopus-cli/build-information
-          # https://octopus.com/docs/octopus-rest-api/octopus-cli/build-information
-
-      - octopus/push:
-          <<: *octopus_environment_settings
-          package: /tmp/artifacts/<< parameters.package-name >>."$OCTOPUS_PACKAGE_VERSION".zip
-
-      - octopus/create-release:
-          <<: *octopus_environment_settings
-          project: << parameters.octopus-project >>
-          release_number: $OCTOPUS_PACKAGE_VERSION
-          package: << parameters.package-name >>:$OCTOPUS_PACKAGE_VERSION
-          channel: << parameters.octopus-channel >>
-
-          ## Required if Project is using the Git Source Control for the process
-          # TOOD - have open question to octopus support about this
-          # git_ref: << pipeline.git.branch >>
-          # git_Commit: << pipeline.git.revision	>>
+            echo “$DOCKERHUB_PASSWORD” | docker login -u “$DOCKERHUB_USERNAME” — password-stdin
+            DOCKER_TAG_DEPLOY="${DOCKER_TAG}-deploy"
+            docker pull ${DOCKER_TAG}
+            docker tag ${DOCKER_TAG} ${DOCKER_TAG_DEPLOY}
+            docker push ${DOCKER_TAG_DEPLOY}
 
 ######//////##############//////##############//////##############
 #   WORKFLOWS
@@ -153,28 +88,14 @@ jobs:
 workflows:
   version: 2
 
-  build_example:
+  build_and_test:
     jobs:
-      - octopus:
-          <<: *non_release_branch_filter
-          # package-version: "0.0.<< pipeline.number >>"
-          name: Octopus Auto Deploy to DEV
-          package-name:    "zztest-octopus-deploy"
-          octopus-project: "zztest-octopus-deploy"
-          octopus-channel: "1. Dev Only Automatic Deploy"
-
-      - octopus:
-          <<: *release_branch_filter
-          # package-version: "0.0.<< pipeline.number >>"
-          name: Octopus Auto Deploy to Staging
-          package-name:    "zztest-octopus-deploy"
-          octopus-project: "zztest-octopus-deploy"
-          octopus-channel: "2. Staging Only Automatic Deploy"    
-
-      - octopus:
-          <<: *release_tag_filter
-          # package-version: "<< pipeline.git.tag >>"
-          name: Octopus Prepare Deploy to RC/PROD
-          package-name:    "zztest-octopus-deploy-PROD"
-          octopus-project: "zztest-octopus-deploy"
-          octopus-channel: "3. Tagged Release Managed Deployment"
+      - build_image:
+          context: DOCKERHUB
+      - test:
+          requires:
+            - build_image
+      - tag_image_for_deploy:
+          context: DOCKERHUB
+          requires:
+            - test
