@@ -69,7 +69,8 @@ define make-xc-target
 				CGO_ENABLED="0" \
 				GOOS="${1}" \
 				GOARCH="${2}" \
-				pwd && ls -al && go build \
+				GO111MODULE=auto \
+				go build \
 				  -a \
 					-o="pkg/${1}_${2}/${NAME}${3}" \
 					-ldflags "${LD_FLAGS}" \
