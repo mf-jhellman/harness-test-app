@@ -85,6 +85,7 @@ jobs:
     docker: # executor type
       - image: cimg/base:stable
     steps:
+      - checkout
       - setup_remote_docker
       - run:
           name: Tag Image for Deployment
