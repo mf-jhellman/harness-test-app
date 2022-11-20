@@ -58,7 +58,6 @@ jobs:
             CGO_ENABLED="0"
             GOOS=linux
             GOARCH=amd64
-            echo $DOCKER_TAG
             go build \
               -a \
               -o="pkg/linux_amd64/http-echo" \
@@ -70,7 +69,7 @@ jobs:
               --compress \
               --file="docker/alpine/Dockerfile" \
               --build-arg="LD_FLAGS=\"-s -w\"" \
-              --tag="DOCKER_TAG" \
+              --tag="$DOCKER_TAG" \
               .
             echo "export DOCKER_TAG=${DOCKER_TAG}" >> $BASH_ENV
   test:
