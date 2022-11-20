@@ -58,6 +58,7 @@ jobs:
             CGO_ENABLED="0"
             GOOS=linux
             GOARCH=amd64
+            echo $DOCKER_TAG
             go build \
               -a \
               -o="pkg/linux_amd64/http-echo" \
