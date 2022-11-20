@@ -77,7 +77,7 @@ jobs:
       - image: cimg/base:stable
     steps: 
       - run:
-          name: Run Tests
+          name: Run  Tests
           command: | 
             true
 
