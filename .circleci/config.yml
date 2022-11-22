@@ -30,13 +30,6 @@ release_branch_filter: &release_branch_filter
     branches:
       only: *release_branches_list
 
-######//////##############//////##############//////##############
-#   OCTOPUS
-######//////##############//////##############//////##############
-octopus_environment_settings: &octopus_environment_settings
-  api_key: "OCTOPUS_API_KEY"
-  server:  "OCTOPUS_SERVER_URL"
-  space: "Demo"
 
 ######//////##############//////##############//////##############
 #   JOBS
@@ -51,17 +44,17 @@ jobs:
       - run:
           name: Build Image
           command: |
+            env CGO_ENABLED="0" \
+                GOOS=linux \
+                GOARCH=amd64 \
+                go build \
+                -a \
+                -o="pkg/linux_amd64/http-echo" \
+                -ldflags "-s -w"
+
             VERSION=test-$(git rev-parse HEAD) 
             DOCKER_TAG="$DOCKERHUB_USERNAME/http-echo:$VERSION"
-            DOCKER_TARGETS=alpine 
             docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
-            CGO_ENABLED="0"
-            GOOS=linux
-            GOARCH=amd64
-            go build \
-              -a \
-              -o="pkg/linux_amd64/http-echo" \
-              -ldflags "-s -w"
             docker build \
               --rm \
               --force-rm \
