@@ -105,13 +105,7 @@ jobs:
             PR_NUM=$(echo $BRANCH_PR | jq '.number')
             echo "export TAG_VERSION=pr-${PR_NUM}" >> $BASH_ENV
             echo "Branch ${CIRCLE_BRANCH} is currently in pull request with Preview label #${PR_NUM}"
-
-  tag_image_for_deploy: 
-    docker: # executor type
-      - image: cimg/base:stable
-    steps:
-      - checkout
-      - setup_remote_docker
+            echo "Proceeding with retag for deployment"
       - run:
           name: Tag Image for Deployment
           command: |
@@ -144,8 +138,3 @@ workflows:
             - DOCKERHUB
           requires:
             - test
-      - tag_image_for_deploy:
-          context: 
-            - DOCKERHUB
-          requires:
-            - deploy_gate
