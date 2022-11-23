@@ -139,7 +139,7 @@ workflows:
       - test:
           requires:
             - build_image
-      - deploy-gate:
+      - deploy_gate:
           context: 
             - DOCKERHUB
           requires:
@@ -148,4 +148,4 @@ workflows:
           context: 
             - DOCKERHUB
           requires:
-            - deploy-gate
+            - deploy_gate
