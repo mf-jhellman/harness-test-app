@@ -52,7 +52,7 @@ jobs:
                 -o="pkg/linux_amd64/http-echo" \
                 -ldflags "-s -w"
 
-            VERSION=test-$(git rev-parse HEAD) 
+            VERSION=${CIRCLE_BRANCH}-$(git rev-parse HEAD) 
             DOCKER_TAG="$DOCKERHUB_USERNAME/http-echo:$VERSION"
             docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
             docker build \
