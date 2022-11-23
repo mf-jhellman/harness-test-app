@@ -79,6 +79,7 @@ jobs:
       - image: cimg/base:stable
     steps:
       - checkout
+      - setup_remote_docker
       - run:
           name: Check if branch is auto-deploy or in PR preview
           command: |
