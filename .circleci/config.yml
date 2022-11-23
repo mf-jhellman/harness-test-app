@@ -1,36 +1,5 @@
 version: 2.1
 
-
-######//////##############//////##############//////##############
-#    FILTERS
-######//////##############//////##############//////##############      
-
-semver_regex: &semver_regex /^([Vv]?)((([0-9]+)\.([0-9]+)\.([0-9]+)(?:-([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?)$/
-
-release_branches: &release_branches_list
-  - main
-
-# Jobs with this filter only run for semver tag push, but not on branch push
-release_tag_filter: &release_tag_filter
-  filters:
-    branches:
-      ignore: /.*/
-    tags:
-      only: *semver_regex
-
-# Any branch except the release branches
-non_release_branch_filter: &non_release_branch_filter
-  filters:
-    branches:
-      ignore: *release_branches_list
-
-# Only release branches
-release_branch_filter: &release_branch_filter
-  filters:
-    branches:
-      only: *release_branches_list
-
-
 ######//////##############//////##############//////##############
 #   JOBS
 ######//////##############//////##############//////##############
