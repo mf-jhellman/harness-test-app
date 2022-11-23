@@ -74,6 +74,38 @@ jobs:
           command: | 
             true
 
+  deploy_gate:
+    docker: # executor type
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - run:
+          name: Check if branch is auto-deploy or in PR preview
+          command: |
+            AUTODEPLOY_BRANCHES=("staging" "rc" "production")
+            if [[ " ${AUTODEPLOY_BRANCHES[*]} " =~ " ${CIRCLE_BRANCH} " ]]; then 
+              echo ${CIRCLE_BRANCH} is set to autodeploy, proceeding with retag for deployment
+              echo "export TAG_VERSION=${CIRCLE_BRANCH}" >> $BASH_ENV
+              exit 0
+            fi
+            BRANCH_PR=$(curl -s \
+             -H "Accept: application/vnd.github+json" \
+             -H "Authorization: token $GITHUB_TOKEN" \
+             "https://api.github.com/repos/mf-jhellman/harness-test-app/pulls?head=mf-jhellman:${CIRCLE_BRANCH}&base=staging" \
+             | jq '.[0] | del(.body)')
+            if [ "$BRANCH_PR" != "null" ]; then
+              PREVIEW_LABEL_ATTACHED=$(echo $BRANCH_PR | jq '.labels[] | select(.name=="Preview")')
+            fi
+            if [ -z "$PREVIEW_LABEL_ATTACHED" ]; then
+              echo "Branch ${CIRCLE_BRANCH} is not currently in a pull request to staging with the Preview label"
+              echo "(Add the Preview label to any PR to staging to create an ephemeral deployment of the branch!)"
+              circleci-agent step halt
+              exit 0
+            fi
+            PR_NUM=$(echo $BRANCH_PR | jq '.number')
+            echo "export TAG_VERSION=pr-${PR_NUM}" >> $BASH_ENV
+            echo "Branch ${CIRCLE_BRANCH} is currently in pull request with Preview label #${PR_NUM}"
+
   tag_image_for_deploy: 
     docker: # executor type
       - image: cimg/base:stable
@@ -83,13 +115,14 @@ jobs:
       - run:
           name: Tag Image for Deployment
           command: |
-            VERSION=${CIRCLE_BRANCH}-$(git rev-parse HEAD) 
-            DOCKER_TAG="$DOCKERHUB_USERNAME/http-echo:$VERSION"
+            OLD_VERSION=${CIRCLE_BRANCH}-$(git rev-parse HEAD) 
+            NEW_VERSION=${TAG_VERSION}-$(git rev-parse HEAD) 
+            OLD_DOCKER_TAG="$DOCKERHUB_USERNAME/http-echo:$OLD_VERSION"
+            NEW_DOCKER_TAG="$DOCKERHUB_USERNAME/http-echo:$NEW_VERSION-deploy"
             docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
-            DOCKER_TAG_DEPLOY="${DOCKER_TAG}-deploy"
-            docker pull ${DOCKER_TAG}
-            docker tag ${DOCKER_TAG} ${DOCKER_TAG_DEPLOY}
-            docker push ${DOCKER_TAG_DEPLOY}
+            docker pull ${OLD_DOCKER_TAG}
+            docker tag ${OLD_DOCKER_TAG} ${NEW_DOCKER_TAG}
+            docker push ${NEW_DOCKER_TAG}
 
 ######//////##############//////##############//////##############
 #   WORKFLOWS
@@ -106,8 +139,13 @@ workflows:
       - test:
           requires:
             - build_image
-      - tag_image_for_deploy:
+      - deploy-gate:
           context: 
             - DOCKERHUB
           requires:
             - test
+      - tag_image_for_deploy:
+          context: 
+            - DOCKERHUB
+          requires:
+            - deploy-gate
