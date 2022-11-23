@@ -83,7 +83,7 @@ jobs:
       - run:
           name: Tag Image for Deployment
           command: |
-            VERSION=test-$(git rev-parse HEAD) 
+            VERSION=${CIRCLE_BRANCH}-$(git rev-parse HEAD) 
             DOCKER_TAG="$DOCKERHUB_USERNAME/http-echo:$VERSION"
             docker login -u "$DOCKERHUB_USERNAME" -p "$DOCKERHUB_PASSWORD"
             DOCKER_TAG_DEPLOY="${DOCKER_TAG}-deploy"
