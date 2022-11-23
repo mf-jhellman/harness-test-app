@@ -7,4 +7,4 @@ data:
   version: "{{ .Values.version }}"
   deployment_id: "{{ .Values.deployment }}"
   bucket: "{{ .Values.bucket }}"
-  NR_APP_NAME: "{{ .Values.name }}-{{ .Values.namespace }}"
+  NR_APP_NAME: "{{ .Values.name }}-{{ .Values.environment }}"

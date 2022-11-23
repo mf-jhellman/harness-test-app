@@ -8,5 +8,6 @@ dockercfg: <+artifact.imagePullSecret>
 bucket: <+pipeline.stages.Canary_Deploy.spec.execution.steps.Provision_Infrastructure.steps.Terraform_Apply.output.bucket>
 
 namespace: <+infra.namespace>
+environment: <+env.name>
 
 nrLicense: <+secrets.getValue("newreliclicense")>
